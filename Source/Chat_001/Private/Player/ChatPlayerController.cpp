@@ -69,7 +69,7 @@ void AChatPlayerController::SetChatMessageString(const FString& InChatMessageStr
 		AChatPlayerState* PS = GetPlayerState<AChatPlayerState>();
 		if (IsValid(PS) == true)
 		{
-			FString CombinedMessageString = PS->GetPlayerInfoString() + TEXT(": ") + InChatMessageString;
+			FString CombinedMessageString = InChatMessageString;
 
 			ServerRPCPrintChatMessageString(CombinedMessageString);
 		}	
@@ -83,14 +83,7 @@ void AChatPlayerController::PrintChatMessageString(const FString& InChatMessageS
 
 void AChatPlayerController::OnRep_IsMyTurn()
 {
-	if (bIsMyTurn)
-	{
-		NotificationText = FText::FromString(TEXT("당신의 턴입니다!"));
-	}
-	else
-	{
-		NotificationText = FText::FromString(TEXT("상대방의 턴입니다."));
-	}
+	
 }
 
 void AChatPlayerController::ClientRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)

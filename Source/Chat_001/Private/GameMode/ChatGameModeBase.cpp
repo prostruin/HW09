@@ -143,6 +143,7 @@ void AChatGameModeBase::BeginPlay()
 	SecretNumberString = GenerateSecretNumber();
 
 	CurrentPlayerIndex = -1;
+	Answer =  TEXT("정답 !!!!	정답은 : ") + SecretNumberString;
 }
 
 void AChatGameModeBase::PrintChatMessageString(AChatPlayerController* InChattingPlayerController,
@@ -167,8 +168,8 @@ void AChatGameModeBase::PrintChatMessageString(AChatPlayerController* InChatting
 		
 		for (TActorIterator<AChatPlayerController> It(GetWorld()); It; ++It)
 		{
-			AChatPlayerController* CXPlayerController = *It;
-			if (IsValid(CXPlayerController) == true)
+			AChatPlayerController* ChatPlayerController = *It;
+			if (IsValid(ChatPlayerController) == true)
 			{
 				AChatPlayerState* PS = InChattingPlayerController->GetPlayerState<AChatPlayerState>();
 				if (IsValid(PS) == true)
@@ -176,25 +177,30 @@ void AChatGameModeBase::PrintChatMessageString(AChatPlayerController* InChatting
 					FString PlayerInfo = TEXT("(") + FString::FromInt(PS->CurrentGuessCount) + TEXT("/") + FString::FromInt(PS->MaxGuessCount) + TEXT(")");
 				
 
-				
-					FString CombinedMessageString = InChatMessageString + PlayerInfo + TEXT(" -> ") + JudgeResultString;
-					CXPlayerController->ClientRPCPrintChatMessageString(CombinedMessageString);
+					FString Player = PS->GetPlayerInfoString() + TEXT(" : ");
+					FString CombinedMessageString = Player + InChatMessageString + PlayerInfo + TEXT(" -> ") + JudgeResultString;
+					ChatPlayerController->ClientRPCPrintChatMessageString(CombinedMessageString);
 
 					int32 StrikeCount = FCString::Atoi(*JudgeResultString.Left(1));
 					JudgeGame(InChattingPlayerController, StrikeCount);
 				}
 			}
 		}
-		OnTurnFinished();
+		OnTurnFinished(); // 시간내 숫자를 입력할시 다음 사람 턴으로 이동.
 	}
 	else
 	{
 		for (TActorIterator<AChatPlayerController> It(GetWorld()); It; ++It)
 		{
-			AChatPlayerController* CXPlayerController = *It;
-			if (IsValid(CXPlayerController) == true)
+			AChatPlayerController* ChatPlayerController = *It;
+			if (IsValid(ChatPlayerController) == true)
 			{
-				CXPlayerController->ClientRPCPrintChatMessageString(InChatMessageString);
+				AChatPlayerState* PS = ChatPlayerController->GetPlayerState<AChatPlayerState>();
+				if (IsValid(PS) == true)
+				{
+					FString Player = PS->GetPlayerInfoString() + TEXT(" : ");
+					ChatPlayerController->ClientRPCPrintChatMessageString(Player + InChatMessageString);
+				}
 			}
 		}
 	}
@@ -202,10 +208,10 @@ void AChatGameModeBase::PrintChatMessageString(AChatPlayerController* InChatting
 
 void AChatGameModeBase::IncreaseGuessCount(AChatPlayerController* InChattingPlayerController)
 {
-	AChatPlayerState* CXPS = InChattingPlayerController->GetPlayerState<AChatPlayerState>();
-	if (IsValid(CXPS) == true)
+	AChatPlayerState* PS = InChattingPlayerController->GetPlayerState<AChatPlayerState>();
+	if (IsValid(PS) == true)
 	{
-		CXPS->CurrentGuessCount++;
+		PS->CurrentGuessCount++;
 	}
 }
 
@@ -213,12 +219,12 @@ void AChatGameModeBase::ResetGame()
 {
 	SecretNumberString = GenerateSecretNumber();
 
-	for (const auto& CXPlayerController : AllPlayerControllers)
+	for (const auto& ChatPlayerController : AllPlayerControllers)
 	{
-		AChatPlayerState* CXPS = CXPlayerController->GetPlayerState<AChatPlayerState>();
-		if (IsValid(CXPS) == true)
+		AChatPlayerState* PS = ChatPlayerController->GetPlayerState<AChatPlayerState>();
+		if (IsValid(PS) == true)
 		{
-			CXPS->CurrentGuessCount = 0;
+			PS->CurrentGuessCount = 0;
 		}
 	}
 }
@@ -227,31 +233,33 @@ void AChatGameModeBase::JudgeGame(AChatPlayerController* InChattingPlayerControl
 {
 	if (3 == InStrikeCount)
 	{
-		AChatPlayerState* CXPS = InChattingPlayerController->GetPlayerState<AChatPlayerState>();
-		for (const auto& CXPlayerController : AllPlayerControllers)
+		AChatPlayerState* PS = InChattingPlayerController->GetPlayerState<AChatPlayerState>();
+		for (const auto& ChatPlayerController : AllPlayerControllers)
 		{
-			if (IsValid(CXPS) == true)
+			if (IsValid(PS) == true)
 			{
-				FString CombinedMessageString = CXPS->PlayerNameString + TEXT(" has won the game.");
-				CXPlayerController->NotificationText = FText::FromString(CombinedMessageString);
-				CXPlayerController->TimerText = FText(); // 타이머 초기화
+				FString CombinedMessageString = PS->PlayerNameString + TEXT(" has won the game.");
+				ChatPlayerController->NotificationText = FText::FromString(CombinedMessageString);
+				ChatPlayerController->TimerText = FText(); // 타이머 초기화
 
 				ResetGame();
 			}
+			ChatPlayerController->ClientRPCPrintChatMessageString(PS->GetPlayerInfoString() + Answer);
 		}
+		
 	}
 	else
 	{
 		bool bIsDraw = true;
-		for (const auto& CXPlayerController : AllPlayerControllers)
+		for (const auto& ChatPlayerController : AllPlayerControllers)
 		{
-			AChatPlayerState* CXPS = CXPlayerController->GetPlayerState<AChatPlayerState>();
-			if (IsValid(CXPS) == true)
+			AChatPlayerState* PS = ChatPlayerController->GetPlayerState<AChatPlayerState>();
+			if (IsValid(PS) == true)
 			{
-				if (CXPS->CurrentGuessCount < CXPS->MaxGuessCount)
+				if (PS->CurrentGuessCount < PS->MaxGuessCount)
 				{
 					bIsDraw = false;
-					CXPlayerController->TimerText = FText(); // 타이머 초기화
+					ChatPlayerController->TimerText = FText(); // 타이머 초기화
 					break;
 				}
 			}
@@ -263,7 +271,7 @@ void AChatGameModeBase::JudgeGame(AChatPlayerController* InChattingPlayerControl
 			{
 				CXPlayerController->NotificationText = FText::FromString(TEXT("Draw..."));
 				CXPlayerController->TimerText = FText(); // 타이머 초기화
-
+				
 				ResetGame();
 			}
 		}
@@ -275,11 +283,12 @@ void AChatGameModeBase::BeginTurn()
 	// 이전 플레이어의 턴 알림 및 타이머 초기화
 	if (CurrentPlayerIndex != -1)
 	{
-		AChatPlayerController* PreviousPlayer = AllPlayerControllers[CurrentPlayerIndex];
-		if (IsValid(PreviousPlayer))
+		AChatPlayerController* PC = AllPlayerControllers[CurrentPlayerIndex];
+		if (IsValid(PC))
 		{
-			PreviousPlayer->NotificationText = FText::FromString(TEXT("상대방의 턴입니다."));
-			PreviousPlayer->TimerText = FText();
+			PC->bIsMyTurn = false;
+			PC->NotificationText = FText::FromString(TEXT("상대방의 턴입니다."));
+			PC->TimerText = FText();
 		}
 	}
     
@@ -290,6 +299,7 @@ void AChatGameModeBase::BeginTurn()
 	AChatPlayerController* CurrentPlayer = AllPlayerControllers[CurrentPlayerIndex];
 	if (IsValid(CurrentPlayer))
 	{
+		CurrentPlayer->bIsMyTurn = true;
 		CurrentPlayer->NotificationText = FText::FromString(TEXT("당신의 턴입니다!"));
         
 		// 타이머 시작
@@ -323,7 +333,7 @@ void AChatGameModeBase::HandleTurnTick()
 	// 시간이 0이 되면 턴 종료
 	if (TurnTimeRemaining <= 0)
 	{
-		IncreaseGuessCount(CurrentPlayer);
+		IncreaseGuessCount(CurrentPlayer); // 숫자를 입력하지않았을때 도 횟수는 증가함.
 		OnTurnFinished();
 	}
 }
@@ -335,6 +345,7 @@ void AChatGameModeBase::OnTurnFinished()
 	AChatPlayerController* CurrentPlayer = AllPlayerControllers[CurrentPlayerIndex];
 	if (IsValid(CurrentPlayer))
 	{
+		CurrentPlayer->bIsMyTurn = false;
 		CurrentPlayer->NotificationText = FText::FromString(TEXT("시간 초과!"));
 		CurrentPlayer->TimerText = FText();
 	}

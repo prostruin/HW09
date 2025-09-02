@@ -47,6 +47,8 @@ protected:
 
 	int32 BaseTime;
 
+	FString Answer;
+
 	void BeginTurn();
 	void HandleTurnTick();
 	void OnTurnFinished();
