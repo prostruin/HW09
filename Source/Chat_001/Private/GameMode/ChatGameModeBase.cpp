@@ -139,11 +139,10 @@ FString AChatGameModeBase::JudgeResult(const FString& InSecretNumberString, cons
 void AChatGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
-
 	SecretNumberString = GenerateSecretNumber();
 
 	CurrentPlayerIndex = -1;
-	Answer =  TEXT("정답 !!!!	정답은 : ") + SecretNumberString;
+
 }
 
 void AChatGameModeBase::PrintChatMessageString(AChatPlayerController* InChattingPlayerController,
@@ -161,7 +160,7 @@ void AChatGameModeBase::PrintChatMessageString(AChatPlayerController* InChatting
 			InChattingPlayerController->NotificationText = FText::FromString(TEXT("당신의 턴이 아닙니다"));
 			return;
 		}
-
+		Answer = SecretNumberString;
 		FString JudgeResultString = JudgeResult(SecretNumberString, GuessNumberString);
 		IncreaseGuessCount(InChattingPlayerController);
 
@@ -217,6 +216,7 @@ void AChatGameModeBase::IncreaseGuessCount(AChatPlayerController* InChattingPlay
 
 void AChatGameModeBase::ResetGame()
 {
+
 	SecretNumberString = GenerateSecretNumber();
 
 	for (const auto& ChatPlayerController : AllPlayerControllers)
@@ -238,16 +238,13 @@ void AChatGameModeBase::JudgeGame(AChatPlayerController* InChattingPlayerControl
 		{
 			if (IsValid(PS) == true)
 			{
-				FString CombinedMessageString = PS->PlayerNameString + TEXT(" has won the game.");
-				ChatPlayerController->NotificationText = FText::FromString(CombinedMessageString);
 				ChatPlayerController->TimerText = FText(); // 타이머 초기화
-				ChatPlayerController->ResultText = FText::FromString(CombinedMessageString);
-
-				ResetGame();
+				ChatPlayerController->ResultText = FText::FromString(PS->GetPlayerInfoString() + TEXT(" 정답! 정답은 : ") + Answer);
+				
 			}
-			ChatPlayerController->ClientRPCPrintChatMessageString(PS->GetPlayerInfoString() + Answer);
+
 		}
-		
+		ResetGame();
 	}
 	else
 	{

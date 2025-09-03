@@ -79,7 +79,7 @@ void AChatPlayerController::SetChatMessageString(const FString& InChatMessageStr
 
 void AChatPlayerController::PrintChatMessageString(const FString& InChatMessageString)
 {
-	ChatXFunctionLibrary::MyPrintString(this, InChatMessageString, 10.f);
+	ChatXFunctionLibrary::MyPrintString(this, InChatMessageString, 20.f);
 }
 
 void AChatPlayerController::OnRep_IsMyTurn()
