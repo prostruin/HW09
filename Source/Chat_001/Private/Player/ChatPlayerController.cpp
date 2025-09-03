@@ -25,6 +25,7 @@ void AChatPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimePro
 
 	DOREPLIFETIME(ThisClass, NotificationText);
 	DOREPLIFETIME(ThisClass, TimerText);
+	DOREPLIFETIME(ThisClass, ResultText);
 	DOREPLIFETIME(ThisClass, bIsMyTurn);
 }
 

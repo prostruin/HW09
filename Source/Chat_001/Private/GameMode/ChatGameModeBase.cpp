@@ -241,6 +241,7 @@ void AChatGameModeBase::JudgeGame(AChatPlayerController* InChattingPlayerControl
 				FString CombinedMessageString = PS->PlayerNameString + TEXT(" has won the game.");
 				ChatPlayerController->NotificationText = FText::FromString(CombinedMessageString);
 				ChatPlayerController->TimerText = FText(); // 타이머 초기화
+				ChatPlayerController->ResultText = FText::FromString(CombinedMessageString);
 
 				ResetGame();
 			}
@@ -267,10 +268,11 @@ void AChatGameModeBase::JudgeGame(AChatPlayerController* InChattingPlayerControl
 
 		if (true == bIsDraw)
 		{
-			for (const auto& CXPlayerController : AllPlayerControllers)
+			for (const auto& ChatPlayerController : AllPlayerControllers)
 			{
-				CXPlayerController->NotificationText = FText::FromString(TEXT("Draw..."));
-				CXPlayerController->TimerText = FText(); // 타이머 초기화
+				ChatPlayerController->NotificationText = FText::FromString(TEXT("Draw..."));
+				ChatPlayerController->TimerText = FText(); // 타이머 초기화
+				ChatPlayerController->ResultText = FText::FromString(TEXT("Draw..."));
 				
 				ResetGame();
 			}

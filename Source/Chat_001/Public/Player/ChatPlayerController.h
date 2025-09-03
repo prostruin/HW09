@@ -29,7 +29,10 @@ public:
 	FText NotificationText;
 	
 	UPROPERTY(Replicated, BlueprintReadOnly)
-    FText TimerText;
+	FText TimerText;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	FText ResultText;
 
 	
 	virtual void BeginPlay() override;
